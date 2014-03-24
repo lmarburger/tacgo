@@ -1,0 +1,106 @@
+#!/usr/bin/env ruby
+
+require 'bundler/setup'
+require 'json'
+require 'netrc'
+require 'ruby-progressbar'
+require 'yaml/store'
+
+END { start }
+
+class Credentials
+  attr_reader :netrc, :label
+
+  def initialize(netrc = Netrc.read, label = 'tacoapp.com')
+    @netrc = netrc
+    @label = label
+  end
+
+  def email
+    credentials.first
+  end
+
+  def password
+    credentials.last
+  end
+
+private
+
+  def credentials
+    Array netrc[label]
+  end
+end
+
+
+Task = Struct.new(:id, :label) do
+  def self.parse(data)
+    Task.new(data['id'], data['label'])
+  end
+end
+
+Pomodoro = Struct.new(:task, :started, :completed) do
+  def start(store)
+    self.started = Time.now
+    store.transaction do
+      store['pomodori'] ||= []
+      store['pomodori'] << self
+    end
+  end
+
+  def complete(store)
+    store.transaction do
+      store['pomodori'].delete_if {|pomodoro| pomodoro == self }
+      self.completed = Time.now
+      store['pomodori'] << self
+    end
+  end
+end
+
+
+def start
+  task     = fetch_top_task(agent)
+  pomodoro = Pomodoro.new(task)
+  pomodoro.start(store)
+
+  duration = 20 * 60
+  progress = ProgressBar.create(title: task.label[0..40], total: duration)
+
+  Thread.abort_on_exception = true
+  Thread.new(pomodoro, duration, progress) do |pomodoro, duration, progress|
+    while (now = Time.now) < pomodoro.started + duration
+      progress.progress = now - pomodoro.started
+      sleep 1
+    end
+  end.join
+  progress.finish
+
+  pomodoro.complete(store)
+end
+
+def store
+  @store ||= YAML::Store.new('tacgo.yaml')
+end
+
+def fetch_top_task(agent)
+  require 'mechanize'
+  agent = Mechanize.new
+  sign_in agent
+
+  Task.parse(JSON(agent.get('https://tacoapp.com/tasks.json').body)[0])
+end
+
+def signed_in?(page)
+  page.form_with(id: 'new_user').nil?
+end
+
+def sign_in(agent)
+  page       = agent.get('https://tacoapp.com/tasks')
+  login_form = page.form_with(id: 'new_user')
+
+  credentials = Credentials.new
+  login_form.field_with(name: 'user[email]').value    = credentials.email
+  login_form.field_with(name: 'user[password]').value = credentials.password
+  page = agent.submit(login_form)
+
+  raise 'bad credentials' unless signed_in?(page)
+end
