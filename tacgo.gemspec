@@ -8,9 +8,9 @@ Gem::Specification.new do |spec|
   spec.homepage    = 'https://github.com/lmarburger/tacgo'
   spec.licenses    = ['MIT']
 
-  spec.add_dependency 'mechanize',        '~> 2.7.3'
-  spec.add_dependency 'netrc',            '~> 0.7.7'
-  spec.add_dependency 'ruby-progressbar', '~> 1.4.2'
+  spec.add_dependency 'mechanize',        '~> 2.7'
+  spec.add_dependency 'netrc',            '~> 0.7'
+  spec.add_dependency 'ruby-progressbar', '~> 1.4'
 
   spec.bindir      = 'bin'
   spec.executables = ['tacgo']
