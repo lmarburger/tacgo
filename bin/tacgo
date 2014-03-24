@@ -58,7 +58,7 @@ end
 
 
 def start
-  task     = fetch_top_task(agent)
+  task     = fetch_top_task
   pomodoro = Pomodoro.new(task)
   pomodoro.start(store)
 
@@ -75,13 +75,14 @@ def start
   progress.finish
 
   pomodoro.complete(store)
+  `osascript -e 'display notification "Pomodoro complete" with title "Pomodoro complete" sound name "Glass"'`
 end
 
 def store
   @store ||= YAML::Store.new('tacgo.yaml')
 end
 
-def fetch_top_task(agent)
+def fetch_top_task
   require 'mechanize'
   agent = Mechanize.new
   sign_in agent
