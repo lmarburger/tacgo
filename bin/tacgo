@@ -38,7 +38,33 @@ Task = Struct.new(:id, :label) do
   end
 end
 
-Pomodoro = Struct.new(:task, :started, :completed) do
+Pomodoro = Struct.new(:task, :duration, :started, :completed) do
+  attr_accessor :restarted, :canceled
+
+  def initialize(task = nil, duration = 25 * 60, started = nil, completed = nil)
+    super task, duration, started, completed
+  end
+
+  def active?
+    canceled.nil? and progress < duration
+  end
+
+  def canceled?
+    !canceled.nil?
+  end
+
+  def progress
+    [ Time.now - (restarted || started), duration ].min
+  end
+
+  def restart
+    self.restarted = Time.now
+  end
+
+  def cancel
+    self.canceled = Time.now
+  end
+
   def start(store)
     self.started = Time.now
     store.transaction do
@@ -61,23 +87,27 @@ def start
   task     = fetch_top_task
   pomodoro = Pomodoro.new(task)
   pomodoro.start(store)
-
-  duration = 25 * 60
   progress = ProgressBar.create(title:  task.label[0..40],
-                                total:  duration,
+                                total:  pomodoro.duration,
                                 format: '%t: |%B| %p%%')
 
   Thread.abort_on_exception = true
-  Thread.new(pomodoro, duration, progress) do |pomodoro, duration, progress|
-    while (now = Time.now) < pomodoro.started + duration
-      progress.progress = now - pomodoro.started
-      sleep 1
+  Thread.new(pomodoro, progress) do |pomodoro, progress|
+    $stdin.echo = false
+    Signal.trap('INT')  { pomodoro.cancel }
+    Signal.trap('QUIT') { pomodoro.restart }
+
+    while pomodoro.active?
+      progress.progress = pomodoro.progress
+      sleep 0.1
+    end
+
+    unless pomodoro.canceled?
+      progress.finish
+      pomodoro.complete store
+      `osascript -e 'display notification "Pomodoro complete" with title "Pomodoro complete" sound name "Glass"'`
     end
   end.join
-  progress.finish
-
-  pomodoro.complete(store)
-  `osascript -e 'display notification "Pomodoro complete" with title "Pomodoro complete" sound name "Glass"'`
 end
 
 def store
