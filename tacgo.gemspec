@@ -1,6 +1,6 @@
 Gem::Specification.new do |spec|
   spec.name        = 'tacgo'
-  spec.version     = '0.0.2'
+  spec.version     = '0.0.3'
   spec.summary     = 'Taco and Pomodoro'
   spec.description = 'Time and track pomodori against the top task in Taco'
   spec.authors     = ['Larry Marburger']
