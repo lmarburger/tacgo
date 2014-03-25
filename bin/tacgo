@@ -63,7 +63,9 @@ def start
   pomodoro.start(store)
 
   duration = 25 * 60
-  progress = ProgressBar.create(title: task.label[0..40], total: duration)
+  progress = ProgressBar.create(title:  task.label[0..40],
+                                total:  duration,
+                                format: '%t: |%B| %p%%')
 
   Thread.abort_on_exception = true
   Thread.new(pomodoro, duration, progress) do |pomodoro, duration, progress|
