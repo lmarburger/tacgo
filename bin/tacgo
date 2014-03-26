@@ -6,8 +6,6 @@ require 'netrc'
 require 'ruby-progressbar'
 require 'yaml/store'
 
-END { start }
-
 class Credentials
   attr_reader :netrc, :label
 
@@ -137,3 +135,7 @@ def sign_in(agent)
 
   raise 'bad credentials' unless signed_in?(page)
 end
+
+
+at_exit { $stdin.echo = true }
+start
