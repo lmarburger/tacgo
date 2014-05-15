@@ -22,8 +22,8 @@ It's still rough around the edges.
       password xxxxxxxxxxxxxxxxxxxx
     ```
 
-  3. Work!
+ 3. Work!
 
-    ```
-    $ tacgo
-    ```
+   ```
+   $ tacgo
+   ```
