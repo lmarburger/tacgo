@@ -95,6 +95,10 @@ def start
     Signal.trap('INT')  { pomodoro.cancel }
     Signal.trap('QUIT') { pomodoro.restart }
 
+    system 'osascript', '-e', 'display notification ' +
+      %{#{pomodoro.task.label.inspect} with title "Pomodoro started" sound } +
+      'name "Ping"'
+
     while pomodoro.active?
       progress.progress = pomodoro.progress
       sleep 0.1
