@@ -103,7 +103,9 @@ def start
     unless pomodoro.canceled?
       progress.finish
       pomodoro.complete store
-      `osascript -e 'display notification "Pomodoro complete" with title "Pomodoro complete" sound name "Glass"'`
+      system 'osascript', '-e',
+        'display notification "Pomodoro complete" with title ' \
+        '"Pomodoro complete" sound name "Glass"'
     end
   end.join
 end
