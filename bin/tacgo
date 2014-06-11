@@ -92,7 +92,7 @@ def start
   Thread.abort_on_exception = true
   Thread.new(pomodoro, progress) do |pomodoro, progress|
     $stdin.echo = false
-    Signal.trap('INT')  { pomodoro.cancel }
+    Signal.trap('INT')  { pomodoro.cancel; puts }
     Signal.trap('QUIT') { pomodoro.restart }
 
     system 'osascript', '-e', 'display notification ' +
